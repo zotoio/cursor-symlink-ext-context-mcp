@@ -1,0 +1,10 @@
+---
+description: Sample CORE rules for symlink testing
+alwaysApply: true
+---
+
+# CORE Standards
+
+- Prefer CORE shared primitives over local duplicates
+- Keep extension content under `ext/` symlinks
+- Document symlink targets in README files

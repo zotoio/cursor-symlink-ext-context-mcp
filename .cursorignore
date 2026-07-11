@@ -1,0 +1,64 @@
+# Re-include gitignored symlinks so Cursor still indexes extension content
+!.cursor/agents/CORE
+!.cursor/commands/CORE
+!.cursor/hooks/CORE
+!.cursor/rules/CORE
+!.cursor/skills/CORE
+
+# Also re-include contents reached through those links
+!.cursor/agents/CORE/**
+!.cursor/commands/CORE/**
+!.cursor/hooks/CORE/**
+!.cursor/rules/CORE/**
+!.cursor/skills/CORE/**
+
+
+
+
+
+
+
+
+
+
+
+
+
+# cursor-symlink-ext-context-mcp:extension:PRODUCT:begin
+!.cursor/agents/ext/PRODUCT
+!.cursor/agents/ext/PRODUCT/**
+!.cursor/commands/ext/PRODUCT
+!.cursor/commands/ext/PRODUCT/**
+!.cursor/hooks/ext/PRODUCT
+!.cursor/hooks/ext/PRODUCT/**
+!.cursor/rules/ext/PRODUCT
+!.cursor/rules/ext/PRODUCT/**
+!.cursor/skills/ext/PRODUCT
+!.cursor/skills/ext/PRODUCT/**
+# cursor-symlink-ext-context-mcp:extension:PRODUCT:end
+
+# cursor-symlink-ext-context-mcp:extension:QA:begin
+!.cursor/agents/ext/QA
+!.cursor/agents/ext/QA/**
+!.cursor/commands/ext/QA
+!.cursor/commands/ext/QA/**
+!.cursor/hooks/ext/QA
+!.cursor/hooks/ext/QA/**
+!.cursor/rules/ext/QA
+!.cursor/rules/ext/QA/**
+!.cursor/skills/ext/QA
+!.cursor/skills/ext/QA/**
+# cursor-symlink-ext-context-mcp:extension:QA:end
+
+# cursor-symlink-ext-context-mcp:extension:SUPPORT:begin
+!.cursor/agents/ext/SUPPORT
+!.cursor/agents/ext/SUPPORT/**
+!.cursor/commands/ext/SUPPORT
+!.cursor/commands/ext/SUPPORT/**
+!.cursor/hooks/ext/SUPPORT
+!.cursor/hooks/ext/SUPPORT/**
+!.cursor/rules/ext/SUPPORT
+!.cursor/rules/ext/SUPPORT/**
+!.cursor/skills/ext/SUPPORT
+!.cursor/skills/ext/SUPPORT/**
+# cursor-symlink-ext-context-mcp:extension:SUPPORT:end

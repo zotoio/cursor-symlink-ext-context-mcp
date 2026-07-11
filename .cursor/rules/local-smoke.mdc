@@ -1,0 +1,8 @@
+---
+description: In-repo sample rule (not a symlink) for baseline comparison
+alwaysApply: true
+---
+
+# Local Smoke Rule
+
+This rule lives directly in the repo (not via symlink) so you can compare loading behavior with `rules/ext/*`.

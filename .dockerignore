@@ -1,0 +1,8 @@
+.git/
+.venv/
+.pytest_cache/
+__pycache__/
+tests/
+.cursor/
+installer/payload/
+installer/docker/.env

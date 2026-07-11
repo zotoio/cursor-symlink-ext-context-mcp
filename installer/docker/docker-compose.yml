@@ -1,0 +1,38 @@
+services:
+  core-context:
+    build:
+      context: ../..
+      dockerfile: installer/docker/Dockerfile
+    container_name: core-context-mcp
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8989:8989"
+    environment:
+      HOME: ${HOST_HOME:?Set HOST_HOME to the host home directory}
+      CORE_CONTEXT_DIR: ${HOST_HOME:?Set HOST_HOME to the host home directory}/CORE/CONTEXT
+      EXTENSIONS_DIR: ${HOST_HOME:?Set HOST_HOME to the host home directory}/.extensions/extensions
+      CONTEXT_INDEX_PATH: /var/lib/core-context/context-index.json
+      HF_HOME: /var/lib/huggingface
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: "8989"
+      MCP_PATH: /mcp
+    volumes:
+      - ${HOST_HOME:?Set HOST_HOME to the host home directory}/CORE/CONTEXT:${HOST_HOME}/CORE/CONTEXT:ro
+      - ${HOST_HOME:?Set HOST_HOME to the host home directory}/.extensions:${HOST_HOME}/.extensions:ro
+      - core-context-index:/var/lib/core-context
+      - core-context-models:/var/lib/huggingface
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8989/ready')"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 180s
+    stop_grace_period: 30s
+
+volumes:
+  core-context-index:
+  core-context-models:

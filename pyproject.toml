@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cursor-symlink-ext-context-mcp"
+version = "0.1.0"
+description = "Local semantic search MCP server for CORE and extension context."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastmcp>=2.0",
+  "pydantic>=2.13.4",
+  "sentence-transformers>=5.0",
+  "watchdog>=6.0",
+]
+
+[project.scripts]
+context-mcp = "context_mcp.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["context_mcp/src/context_mcp"]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.9",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

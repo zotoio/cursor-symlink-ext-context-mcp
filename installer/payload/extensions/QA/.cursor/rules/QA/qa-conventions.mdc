@@ -1,0 +1,10 @@
+---
+description: QA extension conventions
+alwaysApply: true
+---
+
+# QA conventions
+
+- Define expected behavior before adding a test.
+- Cover happy paths, failures, and meaningful boundary cases.
+- Make failures reproducible with clear test names and fixtures.

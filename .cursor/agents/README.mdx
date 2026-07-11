@@ -1,0 +1,17 @@
+# Agents (MDX)
+
+This MDX entry follows the dynamic layout documented in `README.md`.
+
+- `CORE` links to the installed shared agent tree after `installer/setup.sh`.
+- `ext/<NAME>` links to a machine-installed extension selected through
+  `/extension-install`.
+- Available names come from `installer/extensions.json`; installed names come from
+  `~/.extensions/extensions.json`; use `/extension-list` to inspect both sets.
+
+The installed set can grow or shrink over time. `/extension-update` refreshes
+committed payload changes without changing that set, and `/extension-uninstall`
+removes a selected runtime link while preserving its payload.
+
+The extension model is a precursor to Cursor plugins: it keeps versioned
+`CONTEXT/` packs and semantic indexing linked to the corresponding primitives until
+native plugin support for that relationship is designed.

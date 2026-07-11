@@ -1,0 +1,10 @@
+---
+description: Sample SUPPORT rules for symlink testing
+alwaysApply: true
+---
+
+# Support Conventions
+
+- Prefer clear reproduction steps in support notes
+- Do not invent ticket IDs
+- Escalate blockers with severity and owner

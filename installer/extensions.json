@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "extensions": [
+    {
+      "name": "PRODUCT",
+      "description": "Product requirements, acceptance criteria, and briefs.",
+      "hooks": [
+        {
+          "event": "afterFileEdit",
+          "script": "after-file-edit.sh"
+        }
+      ]
+    },
+    {
+      "name": "SUPPORT",
+      "description": "Support triage, incident context, and support briefs.",
+      "hooks": [
+        {
+          "event": "afterFileEdit",
+          "script": "after-file-edit.sh"
+        }
+      ]
+    },
+    {
+      "name": "QA",
+      "description": "Quality review, test coverage, and release checks.",
+      "hooks": [
+        {
+          "event": "beforeSubmitPrompt",
+          "script": "before-submit-prompt.sh"
+        }
+      ]
+    }
+  ]
+}

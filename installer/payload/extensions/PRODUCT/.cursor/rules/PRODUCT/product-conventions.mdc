@@ -1,0 +1,10 @@
+---
+description: Sample PRODUCT rules for symlink testing
+alwaysApply: true
+---
+
+# Product Conventions
+
+- Prefer user-facing language in product docs
+- Every feature note must include an acceptance criterion
+- Do not invent roadmap dates

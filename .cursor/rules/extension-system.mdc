@@ -1,0 +1,30 @@
+---
+description: Preserve the extension catalog, managed installation state, and context MCP service
+alwaysApply: true
+---
+
+# Extension System
+
+- Treat `installer/extensions.json` and `installer/payload/` as committed
+  catalog sources; treat `~/.extensions/extensions.json` as machine-local
+  installed state.
+- Use `installer/manage_extensions.py` or `/extension-*` commands for
+  installation lifecycle changes. Never manually create/remove managed
+  symlinks, edit installed registries, or alter generated ignore blocks.
+- Keep extension Cursor primitives and context inside
+  `installer/payload/extensions/<NAME>/`. Installation materializes those
+  files and links them into projects.
+- `install` changes the installed set, `uninstall` removes it without deleting
+  the committed payload, and `update` refreshes only already-installed
+  extensions. Pulling catalog changes alone must not change installed state.
+- Before using shared context tools, ensure the Docker Compose-managed
+  `core-context` Streamable HTTP service is healthy at `127.0.0.1:8989` and
+  enabled through Cursor's user-level MCP configuration. The first connection
+  can take longer while the embedding model is downloaded.
+- Keep documentation and tests aligned with the shipped implementation. When
+  changing `context_mcp` tools, Docker runtime assets, user-level MCP
+  registration, CORE context-search commands or skills, or their runtime
+  behavior, update `README.md`, `AGENTS.md`, affected primitive files,
+  relevant discovery documentation, and regression tests in the same change.
+  Documented MCP tool names and parameters must match
+  `context_mcp/src/context_mcp/server.py`.
