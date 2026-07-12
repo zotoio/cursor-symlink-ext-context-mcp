@@ -41,6 +41,7 @@ STATE_PATH = Path(
 MCP_HOST = os.environ.get("MCP_HOST", "0.0.0.0")
 MCP_PORT = int(os.environ.get("MCP_PORT", "8989"))
 MCP_PATH = os.environ.get("MCP_PATH", "/mcp")
+WATCHER_DEBOUNCE_SECONDS = float(os.environ.get("WATCHER_DEBOUNCE_SECONDS", "0.5"))
 
 index = ContextIndex(CORE_CONTEXT, STATE_PATH)
 logger = logging.getLogger("context_mcp.audit")
@@ -152,33 +153,57 @@ def initialize_index() -> None:
 
 
 class ContextChangeHandler(FileSystemEventHandler):
+    """Coalesce filesystem bursts into one incremental index refresh."""
+
+    def __init__(self, debounce_seconds: float = WATCHER_DEBOUNCE_SECONDS) -> None:
+        self._debounce_seconds = debounce_seconds
+        self._lock = threading.Lock()
+        self._timer: threading.Timer | None = None
+
     def on_any_event(self, _event: object) -> None:
+        with self._lock:
+            if self._timer is not None:
+                self._timer.cancel()
+            self._timer = threading.Timer(self._debounce_seconds, self._sync)
+            self._timer.daemon = True
+            self._timer.start()
+
+    def _sync(self) -> None:
+        with self._lock:
+            self._timer = None
         try:
             index.sync()
         except OSError:
             # A file can disappear between a watcher event and the rescan.
             pass
 
+    def close(self) -> None:
+        with self._lock:
+            if self._timer is not None:
+                self._timer.cancel()
+                self._timer = None
 
-def start_watcher() -> Observer:
+
+def start_watcher() -> tuple[Observer, ContextChangeHandler]:
     observer = Observer()
     handler = ContextChangeHandler()
     for directory in (CORE_CONTEXT, EXTENSIONS_DIR):
         if directory.is_dir():
             observer.schedule(handler, str(directory), recursive=True)
     observer.start()
-    return observer
+    return observer, handler
 
 
 @asynccontextmanager
 async def server_lifespan(_server: FastMCP) -> Any:
     """Start indexing without delaying the HTTP liveness endpoint."""
-    observer = start_watcher()
+    observer, handler = start_watcher()
     thread = threading.Thread(target=initialize_index, name="context-index-warmup", daemon=True)
     thread.start()
     try:
         yield
     finally:
+        handler.close()
         observer.stop()
         await asyncio.to_thread(observer.join)
 

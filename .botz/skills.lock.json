@@ -1,0 +1,55 @@
+{
+  "evolution": "notify",
+  "skills": {
+    "3afa518b3d564ead87b7b989200c3f82": {
+      "slug": "migration-authoring@3afa518b",
+      "version": 1,
+      "last_used": "2026-07-12"
+    },
+    "24dcd124f5624cb9b7e04f2837f897ec": {
+      "slug": "data-model-design@24dcd124",
+      "version": 1,
+      "last_used": "2026-07-12"
+    },
+    "b0b41126fbef410c8ad43a3e72601ef9": {
+      "slug": "docs-reliability-review@b0b41126",
+      "version": 1,
+      "last_used": "2026-07-12"
+    },
+    "0445c874a8214873831656056747c431": {
+      "slug": "api-contract-design@0445c874",
+      "version": 1,
+      "last_used": "2026-07-12"
+    },
+    "3d6b319af60e4a5e896970e430751347": {
+      "slug": "regression-risk-assessment@3d6b319a",
+      "version": 1,
+      "last_used": "2026-07-12"
+    },
+    "c928dfbce6e4417c8867c04230c6f77d": {
+      "slug": "code-review-findings@c928dfbc",
+      "version": 1,
+      "last_used": "2026-07-12"
+    },
+    "d75f719198834b188fd6a844d5d3cb10": {
+      "slug": "security-review-findings@d75f7191",
+      "version": 1,
+      "last_used": "2026-07-12"
+    },
+    "e17aab906d9a43a88ea7f37dc92cf692": {
+      "slug": "observability-gap-review@e17aab90",
+      "version": 1,
+      "last_used": "2026-07-12"
+    },
+    "0bcf12f175fa414681d6a3d5467db2fc": {
+      "slug": "stateful-mcp-service-engineering@0bcf12f1",
+      "version": 2,
+      "last_used": "2026-07-12"
+    },
+    "86f16e101e7b4dddaa7de49a5f3c0efa": {
+      "slug": "filesystem-lifecycle-manager@86f16e10",
+      "version": 2,
+      "last_used": "2026-07-12"
+    }
+  }
+}

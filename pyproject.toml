@@ -12,6 +12,7 @@ dependencies = [
   "fastmcp>=2.0",
   "pydantic>=2.13.4",
   "sentence-transformers>=5.0",
+  "torch>=2.0",
   "watchdog>=6.0",
 ]
 
@@ -20,6 +21,14 @@ context-mcp = "context_mcp.server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["context_mcp/src/context_mcp"]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [dependency-groups]
 dev = [

@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import time
 from io import StringIO
 from types import SimpleNamespace
 
@@ -46,6 +47,19 @@ def test_health_and_readiness_endpoints() -> None:
     assert json.loads(pending.body)["error"] == "warming"
     assert ready.status_code == 200
     assert json.loads(ready.body) == {"ready": True, "server": "core-context"}
+
+
+def test_context_change_handler_debounces_refreshes(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[None] = []
+    handler = server.ContextChangeHandler(debounce_seconds=0.01)
+    monkeypatch.setattr(server.index, "sync", lambda: calls.append(None))
+
+    handler.on_any_event(object())
+    handler.on_any_event(object())
+    time.sleep(0.05)
+    handler.close()
+
+    assert calls == [None]
 
 
 def test_context_status_reports_stateful_sessions(monkeypatch: pytest.MonkeyPatch) -> None:

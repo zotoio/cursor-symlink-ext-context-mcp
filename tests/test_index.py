@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from context_mcp.index import ContextIndex
 
 
@@ -36,6 +38,7 @@ def test_semantic_search_indexes_core_and_extension(tmp_path: Path) -> None:
     (payload / "quality.md").write_text("# Payload quality\nDo not index.", encoding="utf-8")
 
     index = ContextIndex(core, tmp_path / "state.json", embedder=FakeEmbedder())
+    index.sync()
 
     hits = index.search("quality tests")
 
@@ -54,9 +57,32 @@ def test_sync_reembeds_edits_and_removes_deleted_files(tmp_path: Path) -> None:
     document = core / "overview.md"
     document.write_text("# Core\nArchitecture.", encoding="utf-8")
     index = ContextIndex(core, tmp_path / "state.json", embedder=FakeEmbedder())
+    index.sync()
 
     assert index.stats()["documents"] == 1
     document.write_text("# Core\nQuality testing.", encoding="utf-8")
+    index.sync()
     assert index.search("quality")[0]["score"] > 0
     document.unlink()
+    index.sync()
     assert index.stats()["documents"] == 0
+
+
+def test_search_read_and_stats_do_not_sync_on_request(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    core = tmp_path / "CORE" / "CONTEXT"
+    core.mkdir(parents=True)
+    document = core / "overview.md"
+    document.write_text("# Core\nQuality testing.", encoding="utf-8")
+    index = ContextIndex(core, tmp_path / "state.json", embedder=FakeEmbedder())
+    index.sync()
+
+    def fail_sync() -> None:
+        raise AssertionError("request path must not rescan the corpus")
+
+    monkeypatch.setattr(index, "sync", fail_sync)
+
+    assert index.search("quality")
+    assert index.read(str(document))["content"].startswith("# Core")
+    assert index.stats()["documents"] == 1

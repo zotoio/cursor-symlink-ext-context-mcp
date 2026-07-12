@@ -183,6 +183,10 @@ def test_docker_compose_exposes_local_http_service() -> None:
     assert 'restart: unless-stopped' in compose
     assert '"127.0.0.1:8989:8989"' in compose
     assert "MCP_PORT: \"8989\"" in compose
+    assert "CONTEXT_MCP_TORCH_THREADS: \"2\"" in compose
+    assert "mem_limit: 2g" in compose
+    assert "cpus: 2.0" in compose
+    assert "pids_limit: 128" in compose
     assert "/ready" in compose
     assert "ENTRYPOINT [\"context-mcp\"]" in dockerfile
 

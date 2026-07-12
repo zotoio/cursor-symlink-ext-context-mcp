@@ -79,8 +79,9 @@ The Context MCP indexes Markdown that is reachable through the installed layout:
    `all-MiniLM-L6-v2` by default, and persists metadata and embeddings in the
    configured context-index path.
 4. A filesystem watcher monitors the CORE context and installed-extension
-   roots. Lifecycle operations also touch `.index-refresh` so the watcher and
-   the next MCP operation rescan the installed context set.
+   roots. It coalesces rapid changes before incrementally rescanning the
+   installed context set. Lifecycle operations also touch `.index-refresh` to
+   schedule that refresh.
 5. `context_search` ranks matching documents. Without an explicit source
    filter, closely ranked results from multiple sources can offer an optional
    source/topic refinement when the client supports MCP elicitation.
@@ -96,7 +97,8 @@ Docker Compose binds the Streamable HTTP endpoint to
 `127.0.0.1:8989/mcp`; the container listens internally on all interfaces, but
 the host port is loopback-only. It mounts the relevant home-directory context
 and extension paths read-only, and persists the index and Hugging Face cache in
-named volumes.
+named volumes. It uses CPU-only PyTorch, limits embedding work to two CPU
+threads, and has Docker limits of 2 GiB memory, two CPUs, and 128 processes.
 
 At startup, the service starts its watcher and warms the index and embedding
 model in a background thread. This permits:
@@ -105,6 +107,8 @@ model in a background thread. This permits:
 - `GET /ready` to return success only after initial indexing and model loading.
 - `context_status()` to expose the indexed document count, sources, model,
   readiness, Streamable HTTP transport, and stateful-session mode.
+- Search, read, and status requests to use the current in-memory index without
+  a filesystem rescan.
 
 The service uses stateful Streamable HTTP. Cursor manages the
 `Mcp-Session-Id`; the server does not persist search history in that session.

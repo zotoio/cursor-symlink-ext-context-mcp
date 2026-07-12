@@ -63,3 +63,7 @@ installed extension topic; result sources identify the extension that supplied
 the context. `context_status` reports `session_mode: "stateful"`. Container
 stderr audit logs contain complete tool payloads and responses, including
 potentially sensitive context content and search-clarification outcomes.
+The service uses CPU-only PyTorch with a two-thread embedding budget and Docker
+limits of 2 GiB memory, two CPUs, and 128 processes. Context changes are
+coalesced by a short watcher debounce; search, read, and status calls use the
+in-memory index without rescanning the corpus.

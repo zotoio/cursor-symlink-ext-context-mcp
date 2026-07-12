@@ -154,6 +154,9 @@ indexed directly.
 installer registers it once at the user level in `~/.cursor/mcp.json`, so it
 is available to every Cursor workspace on this machine. The service binds only
 to loopback on the host. Cursor connects to the service but does not launch it.
+The container uses the CPU-only PyTorch distribution, limits embedding work to
+two CPU threads, and is capped at 2 GiB of memory, two CPUs, and 128 processes
+to keep the local service from monopolizing the machine.
 The service runs in stateful Streamable HTTP mode: FastMCP issues an
 `Mcp-Session-Id` during initialization and clients reuse it on later requests.
 The session is transport-managed and contains no persisted search history.
@@ -172,11 +175,12 @@ Use the installer-managed lifecycle script when needed:
 that the initial index and embedding model are ready. The initial connection may
 take longer while the default sentence-transformer model is downloaded into the
 Docker volume. Later changes to CORE or extension context files are re-indexed by
-the file watcher and verified again on every search.
+the file watcher after a short debounce interval. Search, read, and status calls
+use the in-memory index and do not rescan the corpus.
 Extension install and uninstall update the `CONTEXT/ext/<NAME>` links; update
 refreshes the installed extension content. All three operations touch
-`.index-refresh`, so the watcher and the next MCP operation both rescan the
-installed context set.
+`.index-refresh`, which schedules a debounced rescan of the installed context
+set.
 
 The server exposes:
 

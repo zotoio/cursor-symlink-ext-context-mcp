@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import threading
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
@@ -44,8 +45,16 @@ class ContextIndex:
 
     def _model(self) -> Embedder:
         if self._embedder is None:
+            import torch
             from sentence_transformers import SentenceTransformer
 
+            thread_count = int(os.environ.get("CONTEXT_MCP_TORCH_THREADS", "2"))
+            torch.set_num_threads(max(1, thread_count))
+            try:
+                torch.set_num_interop_threads(max(1, thread_count))
+            except RuntimeError:
+                # Another library may have initialized PyTorch's inter-op pool first.
+                pass
             self._embedder = SentenceTransformer(self.model_name)
         return self._embedder
 
@@ -131,7 +140,6 @@ class ContextIndex:
     def search(
         self, query: str, limit: int = 5, source: str | None = None
     ) -> list[dict[str, object]]:
-        self.sync()
         if not query.strip():
             return []
         vector = [
@@ -161,7 +169,6 @@ class ContextIndex:
         ]
 
     def read(self, path: str) -> dict[str, str]:
-        self.sync()
         with self._lock:
             document = self._documents.get(path)
         if document is None:
@@ -169,7 +176,6 @@ class ContextIndex:
         return {"path": document.path, "source": document.source, "content": document.text}
 
     def stats(self) -> dict[str, object]:
-        self.sync()
         with self._lock:
             sources = sorted({document.source for document in self._documents.values()})
             return {"documents": len(self._documents), "sources": sources, "model": self.model_name}
