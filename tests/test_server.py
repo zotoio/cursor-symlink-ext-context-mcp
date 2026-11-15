@@ -49,6 +49,63 @@ def test_health_and_readiness_endpoints() -> None:
     assert json.loads(ready.body) == {"ready": True, "server": "core-context"}
 
 
+def test_start_watcher_ignores_reads(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
+    scheduled: list[list[type]] = []
+
+    class FakeObserver:
+        def schedule(self, _handler, _path, *, recursive, event_filter):
+            assert recursive is True
+            scheduled.append(event_filter)
+
+        def start(self) -> None:
+            return None
+
+    monkeypatch.setattr(server, "Observer", FakeObserver)
+    monkeypatch.setattr(server, "CORE_CONTEXT", tmp_path)
+    monkeypatch.setattr(server, "EXTENSIONS_DIR", tmp_path / "missing")
+
+    server.start_watcher()
+
+    assert scheduled == [server.CONTENT_WATCH_EVENTS]
+    assert server.FileClosedEvent in server.CONTENT_WATCH_EVENTS
+
+
+def test_reading_a_watched_file_does_not_refresh_the_index(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    calls: list[None] = []
+    monkeypatch.setattr(server.index, "sync", lambda: calls.append(None))
+    root = tmp_path / "CONTEXT"
+    root.mkdir()
+    document = root / "overview.md"
+    document.write_text("# Core\nArchitecture.", encoding="utf-8")
+
+    observer = server.Observer()
+    handler = server.ContextChangeHandler(debounce_seconds=0.05)
+    observer.schedule(
+        handler,
+        str(root),
+        recursive=True,
+        event_filter=server.CONTENT_WATCH_EVENTS,
+    )
+    observer.start()
+    try:
+        with document.open("r", encoding="utf-8") as handle:
+            handle.read()
+        time.sleep(0.25)
+        assert calls == []
+
+        document.write_text("# Core\nQuality testing.", encoding="utf-8")
+        deadline = time.time() + 2
+        while time.time() < deadline and not calls:
+            time.sleep(0.05)
+        assert calls
+    finally:
+        handler.close()
+        observer.stop()
+        observer.join(timeout=2)
+
+
 def test_context_change_handler_debounces_refreshes(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[None] = []
     handler = server.ContextChangeHandler(debounce_seconds=0.01)

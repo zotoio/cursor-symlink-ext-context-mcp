@@ -73,17 +73,20 @@ class ContextIndex:
                 return line[2:].strip()
         return fallback
 
-    def _scan(self) -> dict[str, tuple[str, Path, int, str]]:
-        found: dict[str, tuple[str, Path, int, str]] = {}
+    def _scan(self) -> dict[str, tuple[str, Path, int]]:
+        """Stat Markdown files without reading them.
+
+        Opening every file on each pass emits inotify events for the read, which
+        schedules another sync. Content is read only for files whose mtime changed.
+        """
+        found: dict[str, tuple[str, Path, int]] = {}
         for source, root in self._roots():
             if not root.is_dir():
                 continue
             for path in root.rglob("*.md"):
                 if any(part.startswith(".") for part in path.relative_to(root).parts):
                     continue
-                stat = path.stat()
-                text = path.read_text(encoding="utf-8")
-                found[str(path)] = (source, path, stat.st_mtime_ns, text)
+                found[str(path)] = (source, path, path.stat().st_mtime_ns)
         return found
 
     def sync(self) -> None:
@@ -91,18 +94,24 @@ class ContextIndex:
         with self._lock:
             scanned = self._scan()
             changed = [
-                item
+                (path, item)
                 for path, item in scanned.items()
                 if path not in self._documents or self._documents[path].mtime_ns != item[2]
             ]
-            if not changed and set(scanned) == set(self._documents):
+            removed = set(self._documents) - set(scanned)
+            if not changed and not removed:
                 return
 
             if changed:
+                loaded = [
+                    (source, path, mtime_ns, path.read_text(encoding="utf-8"))
+                    for _key, (source, path, mtime_ns) in changed
+                ]
                 vectors = self._model().encode(
-                    [item[3] for item in changed], normalize_embeddings=True
+                    [text for _source, _path, _mtime_ns, text in loaded],
+                    normalize_embeddings=True,
                 )
-                for (source, path, mtime_ns, text), vector in zip(changed, vectors, strict=True):
+                for (source, path, mtime_ns, text), vector in zip(loaded, vectors, strict=True):
                     self._documents[str(path)] = ContextDocument(
                         path=str(path),
                         source=source,
@@ -112,7 +121,7 @@ class ContextIndex:
                         embedding=[float(value) for value in vector],
                     )
 
-            for path in set(self._documents) - set(scanned):
+            for path in removed:
                 del self._documents[path]
             self._save()
 

@@ -22,7 +22,17 @@ from mcp import types as mt
 from pydantic import Field, create_model
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
-from watchdog.events import FileSystemEventHandler
+from watchdog.events import (
+    DirCreatedEvent,
+    DirDeletedEvent,
+    DirMovedEvent,
+    FileClosedEvent,
+    FileCreatedEvent,
+    FileDeletedEvent,
+    FileMovedEvent,
+    FileSystemEvent,
+    FileSystemEventHandler,
+)
 from watchdog.observers import Observer
 
 from .index import ContextIndex
@@ -42,6 +52,19 @@ MCP_HOST = os.environ.get("MCP_HOST", "0.0.0.0")
 MCP_PORT = int(os.environ.get("MCP_PORT", "8989"))
 MCP_PATH = os.environ.get("MCP_PATH", "/mcp")
 WATCHER_DEBOUNCE_SECONDS = float(os.environ.get("WATCHER_DEBOUNCE_SECONDS", "0.5"))
+# Reads and directory walks emit IN_OPEN / IN_CLOSE_NOWRITE. Watching those
+# makes sync() schedule itself. IN_ATTRIB is also excluded: stating a file can
+# update atime and would retrigger the same loop. Content changes arrive as
+# close-after-write, create, delete, or rename.
+CONTENT_WATCH_EVENTS: list[type[FileSystemEvent]] = [
+    FileClosedEvent,
+    FileCreatedEvent,
+    FileDeletedEvent,
+    FileMovedEvent,
+    DirCreatedEvent,
+    DirDeletedEvent,
+    DirMovedEvent,
+]
 
 index = ContextIndex(CORE_CONTEXT, STATE_PATH)
 logger = logging.getLogger("context_mcp.audit")
@@ -189,7 +212,12 @@ def start_watcher() -> tuple[Observer, ContextChangeHandler]:
     handler = ContextChangeHandler()
     for directory in (CORE_CONTEXT, EXTENSIONS_DIR):
         if directory.is_dir():
-            observer.schedule(handler, str(directory), recursive=True)
+            observer.schedule(
+                handler,
+                str(directory),
+                recursive=True,
+                event_filter=CONTENT_WATCH_EVENTS,
+            )
     observer.start()
     return observer, handler
 

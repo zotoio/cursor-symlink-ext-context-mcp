@@ -51,6 +51,29 @@ def test_semantic_search_indexes_core_and_extension(tmp_path: Path) -> None:
     assert index.read(str(extension / "quality.md"))["content"].startswith("# Installed")
 
 
+def test_sync_does_not_reread_unchanged_files(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    core = tmp_path / "CORE" / "CONTEXT"
+    core.mkdir(parents=True)
+    document = core / "overview.md"
+    document.write_text("# Core\nArchitecture.", encoding="utf-8")
+    index = ContextIndex(core, tmp_path / "state.json", embedder=FakeEmbedder())
+    index.sync()
+
+    reads: list[Path] = []
+    real_read_text = Path.read_text
+
+    def track_read(self: Path, *args: object, **kwargs: object) -> str:
+        reads.append(self)
+        return real_read_text(self, *args, **kwargs)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(Path, "read_text", track_read)
+    index.sync()
+
+    assert reads == []
+
+
 def test_sync_reembeds_edits_and_removes_deleted_files(tmp_path: Path) -> None:
     core = tmp_path / "CORE" / "CONTEXT"
     core.mkdir(parents=True)
